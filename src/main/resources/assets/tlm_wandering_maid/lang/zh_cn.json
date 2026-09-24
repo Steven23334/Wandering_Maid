@@ -68,5 +68,10 @@
   "gui.tlm_wandering_maid.wandering.request.description": "%s 正在等待你的答复。",
   "gui.tlm_wandering_maid.wandering.request.hint": "选择接受可以将其收留，选择拒绝她会离开。",
   "gui.tlm_wandering_maid.wandering.request.accept": "接受",
-  "gui.tlm_wandering_maid.wandering.request.reject": "拒绝"
+  "gui.tlm_wandering_maid.wandering.request.reject": "拒绝",
+  "tlm_wandering_maid.configuration.GiveThingsConfig": "车万女仆给予物品配置",
+  "tlm_wandering_maid.configuration.sellRewardMainItem": "主奖励物品 ID",
+  "tlm_wandering_maid.configuration.sellRewardMainCount": "主奖励物品数量",
+  "tlm_wandering_maid.configuration.sellRewardMainOnlyIfMissing": "仅在背包没有时发放",
+  "tlm_wandering_maid.configuration.sellRewardExtraItems": "附属奖励物品列表"
 }

@@ -35,7 +35,6 @@ This is an addon for the **Touhou Little Maid** mod. It introduces two new ways 
 ## 🎮 Commands
 
 Requires permission level 2:
-
 ```
 /tlm_wandering_maid wanderingmaid spawn
 /tlm_wandering_maid wanderingmaid spawn <player>
@@ -55,6 +54,14 @@ Server-side config: `config/tlm_wandering_maid-Config.toml`
 
 - **Minecraft Versions**: 1.21.1
 - **Required Mod**: [Touhou Little Maid](https://www.curseforge.com/minecraft/mc-mods/touhou-little-maid)
+
+## ⚠️ Compatibility Notice: Touhou Little Maid: Love & Loathe
+
+This mod does **not** guarantee full compatibility with **Touhou Little Maid: Love & Loathe**.
+
+Both mods provide their own config screens with feature toggles for maid behavior, spawning, and interaction, but these toggles are **independent and unaware of each other** — there is no auto-sync or priority handling. Enabling both at the same time may cause overlapping features, behavioral conflicts, or unexpected results.
+
+**Please choose for yourself which mod's features to enable in each config screen.** You assume the risk of mixing them. If issues occur, try disabling one mod's toggles first to isolate the cause.
 
 ## 📜 License
 
@@ -100,7 +107,6 @@ Server-side config: `config/tlm_wandering_maid-Config.toml`
 ## 🎮 指令
 
 需要权限等级 2：
-
 ```
 /tlm_wandering_maid wanderingmaid spawn
 /tlm_wandering_maid wanderingmaid spawn <player>
@@ -120,6 +126,14 @@ Server-side config: `config/tlm_wandering_maid-Config.toml`
 
 - **Minecraft 版本**：1.21.1
 - **必需模组**：[车万女仆 (Touhou Little Maid)](https://www.curseforge.com/minecraft/mc-mods/touhou-little-maid)
+
+## ⚠️ 兼容性提示：Touhou Little Maid: Love & Loathe
+
+本模组**不保证**与 **Touhou Little Maid: Love & Loathe** 的完全兼容性。
+
+两者的配置界面中均包含对女仆行为、生成与交互的功能开关，但**彼此独立、互不感知**，不存在自动同步或优先级协调。同时启用时可能出现功能重叠、行为冲突或预期之外的结果。
+
+**请自行在双方配置界面中择优挑选要启用哪个模组的功能**，并自行承担混用带来的风险。若遇到异常，建议先分别关闭其中一个模组的功能开关进行排查。
 
 ## 📜 许可证
 

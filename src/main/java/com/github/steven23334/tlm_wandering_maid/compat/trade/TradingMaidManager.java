@@ -64,10 +64,6 @@ public final class TradingMaidManager {
 
     private int tickCounter;
 
-    public static boolean blocksNormalInteraction(EntityMaid maid) {
-        return TradingMaidData.isTrading(maid);
-    }
-
     private static boolean enabled() {
         return WanderingMaidConfig.WANDERING_TRADER_MAID_TRADE_ENABLED.get();
     }
@@ -170,22 +166,6 @@ public final class TradingMaidManager {
         ItemStack bed = new ItemStack(InitItems.MAID_BED.get());
         ItemMaidBed.setColor(color, bed);
         trader.getOffers().add(new MerchantOffer(new ItemCost(Items.EMERALD, price), bed, 8, 1, 0.05F));
-    }
-
-    private static void cleanDisabledMarket(ServerLevel level) {
-        Set<UUID> handledTraders = new HashSet<>();
-        for (ServerPlayer player : level.players()) {
-            AABB area = player.getBoundingBox().inflate(TRADER_SCAN_RADIUS);
-            for (WanderingTrader trader : level.getEntitiesOfClass(WanderingTrader.class, area,
-                    candidate -> handledTraders.add(candidate.getUUID()))) {
-                trader.getPersistentData().remove(ITEM_OFFERS_INITIALIZED);
-                trader.getPersistentData().remove(TRADER_INITIALIZED);
-                trader.getPersistentData().remove(RESTOCK_COUNT);
-            }
-            List<EntityMaid> marketMaids = new ArrayList<>(level.getEntitiesOfClass(EntityMaid.class, area,
-                    TradingMaidData::isTrading));
-            marketMaids.forEach(Entity::discard);
-        }
     }
 
     private static void spawnStockMaid(ServerLevel level, WanderingTrader trader, ServerPlayer skinOwner) {
@@ -424,13 +404,12 @@ public final class TradingMaidManager {
                 || maid.distanceToSqr(seller) > SELL_RADIUS * SELL_RADIUS) {
             return;
         }
-        int favorabilityTools = favorabilityToolCount(maid);
         dropAllMaidItems(maid);
         maid.dropLeash(true, false);
         maid.teleportTo(trader.getX() + 1.25, trader.getY(), trader.getZ() + 1.25);
         prepareForSale(maid, trader, randomPrice(seller.serverLevel()));
         maid.setLeashedTo(trader, true);
-        giveSaleReward(seller, seller.serverLevel(), favorabilityTools);
+        giveSaleReward(seller, seller.serverLevel());
         seller.sendSystemMessage(Component.translatable("message.tlm_wandering_maid.trade.sold"));
         maid.getChatBubbleManager().addTextChatBubble("bubble.tlm_wandering_maid.trade.sold");
     }
@@ -439,15 +418,72 @@ public final class TradingMaidManager {
         return Math.max(1, maid.getFavorability() / 64 + 1);
     }
 
-    static Item item = BuiltInRegistries.ITEM.get(
-            ResourceLocation.fromNamespaceAndPath("touhou_little_maid", "favorability_tool_add")
-    );
 
-    private static void giveSaleReward(ServerPlayer player, ServerLevel level, int favorabilityTools) {
-        ItemStack stack = new ItemStack(item, favorabilityTools);
-        give(player, stack);
-        give(player, new ItemStack(Items.NETHERITE_INGOT, 1 + level.getRandom().nextInt(3)));
-        give(player, new ItemStack(Items.ENCHANTED_GOLDEN_APPLE, 3 + level.getRandom().nextInt(6)));
+    private static void giveSaleReward(ServerPlayer player, ServerLevel level) {
+        // ===== 主要奖励物品（可配置 ID） =====
+        String mainItemId = WanderingMaidConfig.WANDERING_TRADER_MAID_SELL_REWARD_MAIN_ITEM.get();
+        Item mainItem = Items.AIR;
+        if (mainItemId != null && !mainItemId.isBlank()) {
+            ResourceLocation id = ResourceLocation.tryParse(mainItemId.trim());
+            if (id != null) {
+                mainItem = BuiltInRegistries.ITEM.get(id);
+            }
+        }
+
+        if (mainItem != Items.AIR) {
+            int mainCount = WanderingMaidConfig.WANDERING_TRADER_MAID_SELL_REWARD_MAIN_COUNT.get();
+            boolean onlyIfMissing = WanderingMaidConfig.WANDERING_TRADER_MAID_SELL_REWARD_MAIN_ONLY_IF_MISSING.get();
+            boolean shouldGive = !onlyIfMissing || player.getInventory().countItem(mainItem) == 0;
+            if (shouldGive) {
+                give(player, new ItemStack(mainItem, mainCount));
+            }
+        }
+
+        // ===== 附属奖励物品列表 =====
+        for (String entry : WanderingMaidConfig.WANDERING_TRADER_MAID_SELL_REWARD_EXTRA_ITEMS.get()) {
+            giveExtraReward(player, level, entry);
+        }
+    }
+
+    /** 解析 "物品ID;min;max" 并发放。格式错误或物品无效时跳过。 */
+    private static void giveExtraReward(ServerPlayer player, ServerLevel level, String entry) {
+        if (entry == null || entry.isBlank()) {
+            return;
+        }
+        String[] parts = entry.split(";");
+        if (parts.length != 3) {
+            return;
+        }
+        ResourceLocation id = ResourceLocation.tryParse(parts[0].trim());
+        if (id == null) {
+            return;
+        }
+        Item item = BuiltInRegistries.ITEM.get(id);
+        if (item == Items.AIR) {
+            return;
+        }
+        int min;
+        int max;
+        try {
+            min = Integer.parseInt(parts[1].trim());
+            max = Integer.parseInt(parts[2].trim());
+        } catch (NumberFormatException e) {
+            return;
+        }
+        giveRandomRange(player, level, item, min, max);
+    }
+
+    /** 在 [min, max] 闭区间内随机一个数量并发放；min/max 都为 0 时不发放。 */
+    private static void giveRandomRange(ServerPlayer player, ServerLevel level, Item item, int min, int max) {
+        int lo = Math.min(min, max);
+        int hi = Math.max(min, max);
+        if (hi <= 0) {
+            return;
+        }
+        int count = lo + level.getRandom().nextInt(hi - lo + 1);
+        if (count > 0) {
+            give(player, new ItemStack(item, count));
+        }
     }
 
     private static void give(ServerPlayer player, ItemStack stack) {

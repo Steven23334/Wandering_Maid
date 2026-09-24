@@ -54,7 +54,8 @@ TLM 流浪女仆与女仆交易 是车万女仆（Touhou Little Maid）的附属
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
 #[[mixins]]
 #config="${mod_id}.mixins.json"
-
+[[mixins]]
+config = "${mod_id}.mixins.json"
 # The [[accessTransformers]] block allows you to declare where your AT file is.
 # If this block is omitted, a fallback attempt will be made to load an AT from META-INF/accesstransformer.cfg
 #[[accessTransformers]]
@@ -95,6 +96,8 @@ TLM 流浪女仆与女仆交易 是车万女仆（Touhou Little Maid）的附属
 # stop your mod loading on the server for example.
 #[features.${mod_id}]
 #openGLVersion="[3.2,)"
-
-[[mixins]]
-    config = "${mod_id}.mixins.json"
+[[dependencies.${mod_id}]]
+modId="callresponse"
+type="discouraged"
+ordering="NONE"
+side="BOTH"

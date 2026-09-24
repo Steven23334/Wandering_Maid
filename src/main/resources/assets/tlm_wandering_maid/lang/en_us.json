@@ -68,5 +68,10 @@
   "gui.tlm_wandering_maid.wandering.request.description": "%s is waiting for your answer.",
   "gui.tlm_wandering_maid.wandering.request.hint": "Accept to take her in, reject to let her leave.",
   "gui.tlm_wandering_maid.wandering.request.accept": "Accept",
-  "gui.tlm_wandering_maid.wandering.request.reject": "Reject"
+  "gui.tlm_wandering_maid.wandering.request.reject": "Reject",
+  "tlm_wandering_maid.configuration.GiveThingsConfig": "Maid Item Rewards",
+  "tlm_wandering_maid.configuration.sellRewardMainItem": "Main Reward Item ID",
+  "tlm_wandering_maid.configuration.sellRewardMainCount": "Main Reward Item Count",
+  "tlm_wandering_maid.configuration.sellRewardMainOnlyIfMissing": "Only Give If Missing",
+  "tlm_wandering_maid.configuration.sellRewardExtraItems": "Extra Reward Items"
 }

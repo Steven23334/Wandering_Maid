@@ -18,19 +18,26 @@ public class WanderingMaidConfig {
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_MAID_DROP_BLACKLIST;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_MAID_DROP_WHITELIST;
 
-    // ===== 流浪商人女仆交易 =====
+    // ===== 流浪商人女仆交易（外层）=====
     public static final ModConfigSpec.IntValue WANDERING_TRADER_MAID_TRADE_WEIGHT;
     public static final ModConfigSpec.IntValue WANDERING_TRADER_MAID_TRADE_PRICE_MIN;
     public static final ModConfigSpec.IntValue WANDERING_TRADER_MAID_TRADE_PRICE_MAX;
     public static final ModConfigSpec.BooleanValue WANDERING_TRADER_MAID_FREE_ON_TRADER_DEATH;
     public static final ModConfigSpec.IntValue WANDERING_TRADER_MAID_TRADE_RESTOCK_TIMES;
 
+    // ===== 卖出女仆奖励（内层，嵌套在交易组内）=====
+    public static final ModConfigSpec.ConfigValue<String> WANDERING_TRADER_MAID_SELL_REWARD_MAIN_ITEM;
+    public static final ModConfigSpec.IntValue WANDERING_TRADER_MAID_SELL_REWARD_MAIN_COUNT;
+    public static final ModConfigSpec.BooleanValue WANDERING_TRADER_MAID_SELL_REWARD_MAIN_ONLY_IF_MISSING;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_TRADER_MAID_SELL_REWARD_EXTRA_ITEMS;
+
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         // ===== 总开关 =====
         builder.comment("总开关")
-                .translation("tlm_wandering_maid.configuration.masterSwitches").push("master_switches");
+                .translation("tlm_wandering_maid.configuration.masterSwitches")
+                .push("master_switches");
 
         WANDERING_MAID_ENABLED = builder
                 .comment("流浪女仆功能总开关。关闭后不再自动生成流浪女仆，但响应 /tlm_wandering_maid wanderingmaid spawn 指令；"
@@ -48,7 +55,8 @@ public class WanderingMaidConfig {
 
         // ===== 流浪女仆 =====
         builder.comment("流浪女仆事件配置")
-                .translation("tlm_wandering_maid.configuration.wanderingMaid").push("wandering_maid");
+                .translation("tlm_wandering_maid.configuration.wanderingMaid")
+                .push("wandering_maid");
 
         WANDERING_MAID_INTERVAL_MINUTES = builder
                 .comment("每隔多少分钟尝试触发一次流浪女仆事件（范围 0~60 分钟；0 表示关闭自动触发，指令触发不受影响）")
@@ -77,7 +85,7 @@ public class WanderingMaidConfig {
 
         builder.pop();
 
-        // ===== 流浪商人女仆交易 =====
+        // ===== 流浪商人女仆交易（外层）=====
         builder.comment("流浪商人女仆交易配置")
                 .translation("tlm_wandering_maid.configuration.wanderingTraderTrade")
                 .push("wandering_trader_maid_trade");
@@ -104,12 +112,51 @@ public class WanderingMaidConfig {
                         + "注意：流浪商人只是离开（未死亡）时，无论此项如何设置，女仆都会被删除。")
                 .translation("tlm_wandering_maid.configuration.wanderingTraderMaidFreeOnDeath")
                 .define("freeMaidOnTraderDeath", true);
+
         WANDERING_TRADER_MAID_TRADE_RESTOCK_TIMES = builder
                 .comment("每个流浪商人最多可以补货几次。0 表示买空后不再补货；范围 0~99。")
                 .translation("tlm_wandering_maid.configuration.wanderingTraderTradeRestockTimes")
                 .defineInRange("restockTimes", 1, 0, 99);
 
-        builder.pop();
+        // ===== 卖出女仆奖励（内层）=====
+        builder.comment("车万女仆给予物品配置")
+                .translation("tlm_wandering_maid.configuration.GiveThingsConfig")
+                .push("wandering_give_things_config");
+
+        WANDERING_TRADER_MAID_SELL_REWARD_MAIN_ITEM = builder
+                .comment("卖出女仆后给予的主要奖励物品 ID，格式为 命名空间:路径，例如 touhou_little_maid:favorability_tool_full。"
+                        + "留空或填写无效 ID 时不会发放该物品。")
+                .translation("tlm_wandering_maid.configuration.sellRewardMainItem")
+                .define("sellRewardMainItem", "touhou_little_maid:favorability_tool_full");
+
+        WANDERING_TRADER_MAID_SELL_REWARD_MAIN_COUNT = builder
+                .comment("主要奖励物品的数量（范围 1~64）")
+                .translation("tlm_wandering_maid.configuration.sellRewardMainCount")
+                .defineInRange("sellRewardMainCount", 1, 1, 64);
+
+        WANDERING_TRADER_MAID_SELL_REWARD_MAIN_ONLY_IF_MISSING = builder
+                .comment("主要奖励物品是否仅在玩家背包中没有时发放。"
+                        + "true：背包已有则不重复给；false：每次卖出都给。")
+                .translation("tlm_wandering_maid.configuration.sellRewardMainOnlyIfMissing")
+                .define("sellRewardMainOnlyIfMissing", true);
+
+        WANDERING_TRADER_MAID_SELL_REWARD_EXTRA_ITEMS = builder
+                .comment("卖出女仆后额外给予的物品列表。每项格式为 物品ID;最少数量;最多数量",
+                        "数量区间为闭区间，min/max 写反会自动交换；min 和 max 都为 0 时该项不发放。",
+                        "Extra items granted on maid sale. Format: ItemID;minAmount;maxAmount.",
+                        "Inclusive range; reversed min/max auto-swap; both 0 = item skipped.",
+                        "Invalid item IDs skip that entry only.")
+                .translation("tlm_wandering_maid.configuration.sellRewardExtraItems")
+                .defineListAllowEmpty("sellRewardExtraItems",
+                        List.of(
+                                "minecraft:netherite_ingot;1;3",
+                                "minecraft:enchanted_golden_apple;3;8"
+                        ),
+                        () -> "minecraft:netherite_ingot;1;3",
+                        value -> value instanceof String);
+
+        builder.pop();   // 退出第 2 层（wandering_give_things_config）
+        builder.pop();   // 退出第 1 层（wandering_trader_maid_trade）
 
         SPEC = builder.build();
     }
