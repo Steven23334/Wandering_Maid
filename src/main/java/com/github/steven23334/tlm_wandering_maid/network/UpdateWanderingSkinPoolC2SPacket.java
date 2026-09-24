@@ -38,7 +38,7 @@ public record UpdateWanderingSkinPoolC2SPacket(List<String> selectedModels) impl
         }
 
         @Override
-        public UpdateWanderingSkinPoolC2SPacket decode(FriendlyByteBuf buf) {
+        public @NotNull UpdateWanderingSkinPoolC2SPacket decode(FriendlyByteBuf buf) {
             int size = buf.readVarInt();
             if (size < 0 || size > 512) {
                 throw new IllegalArgumentException("Invalid wandering maid skin pool size: " + size);

@@ -12,7 +12,6 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-        basicItem(ModItems.HUNT_ORDER.get());
         basicItem(ModItems.WANDERING_MAID_BOOK.get());
     }
 }

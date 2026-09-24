@@ -40,7 +40,7 @@ public record OpenTradingMaidScreenS2CPacket(int traderId,
         }
 
         @Override
-        public OpenTradingMaidScreenS2CPacket decode(FriendlyByteBuf buf) {
+        public @NotNull OpenTradingMaidScreenS2CPacket decode(FriendlyByteBuf buf) {
             int traderId = buf.readVarInt();
             return new OpenTradingMaidScreenS2CPacket(traderId, readList(buf), readList(buf));
         }

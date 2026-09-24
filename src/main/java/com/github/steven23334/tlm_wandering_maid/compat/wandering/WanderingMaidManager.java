@@ -62,10 +62,6 @@ public final class WanderingMaidManager {
     private static final long APPROACH_TIMEOUT = 20L * 90L;
     private static final int SPAWN_GLOW_DURATION = 20 * 60;
 
-    public static boolean blocksNormalInteraction(EntityMaid maid) {
-        return WanderingMaidData.isSpecial(maid);
-    }
-
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onWanderingMaidTick(EntityTickEvent.Pre event) {
         if (event.getEntity() instanceof EntityMaid maid && !maid.level().isClientSide
@@ -232,7 +228,7 @@ public final class WanderingMaidManager {
             return;
         }
         UUID targetId = WanderingMaidData.target(maid).orElse(null);
-        ServerPlayer player = targetId == null || level.getServer() == null
+        ServerPlayer player = targetId == null
                 ? null
                 : level.getServer().getPlayerList().getPlayer(targetId);
         if (player == null || player.level() != level || !player.isAlive() || player.isSpectator()) {
@@ -244,7 +240,6 @@ public final class WanderingMaidManager {
             case APPROACHING, RETRYING -> tickApproach(maid, player, savedData, gameTime);
             case WAITING -> tickWaiting(maid, player, savedData, gameTime);
             case LEAVING -> tickLeaving(maid, player, savedData, gameTime);
-            case REJECTED -> { }
         }
     }
 
@@ -393,7 +388,7 @@ public final class WanderingMaidManager {
         Entity entity = level.getEntity(maidId);
         if (!(entity instanceof EntityMaid maid) || !maid.isAlive() || !WanderingMaidData.isSpecial(maid)
                 || WanderingMaidData.state(maid) != WanderingMaidState.WAITING
-                || !WanderingMaidData.target(maid).filter(player.getUUID()::equals).isPresent()
+                || WanderingMaidData.target(maid).filter(player.getUUID()::equals).isEmpty()
                 || !maid.closerThan(player, 7.0)) {
             return;
         }

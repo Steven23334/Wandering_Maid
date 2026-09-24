@@ -29,7 +29,7 @@ public record OpenWanderingMaidRequestS2CPacket(int entityId, UUID maidId, Compo
                 }
 
                 @Override
-                public OpenWanderingMaidRequestS2CPacket decode(FriendlyByteBuf buf) {
+                public @NotNull OpenWanderingMaidRequestS2CPacket decode(FriendlyByteBuf buf) {
                     return new OpenWanderingMaidRequestS2CPacket(
                             buf.readVarInt(),
                             buf.readUUID(),

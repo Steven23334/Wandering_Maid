@@ -127,7 +127,6 @@ public final class TradingMaidManager {
             return;
         }
 
-        addOfferIfMissing(trader, ModItems.HUNT_ORDER, 32);
         addOfferIfMissing(trader, ModItems.WANDERING_MAID_BOOK, 12);
         addOfferIfMissing(trader, InitItems.SHRINE, 40 + trader.getRandom().nextInt(21));
         int bedPrice = 4 + trader.getRandom().nextInt(5);

@@ -10,6 +10,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.NotNull;
 
 public final class WanderingMaidBookItem extends Item {
     public WanderingMaidBookItem(Properties properties) {
@@ -17,7 +18,7 @@ public final class WanderingMaidBookItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(Level level, @NotNull Player player, @NotNull InteractionHand hand) {
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer
                 && serverPlayer.getServer() != null) {
             WanderingMaidSavedData data =

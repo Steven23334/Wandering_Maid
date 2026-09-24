@@ -21,7 +21,7 @@ public record RequestTradingMaidScreenC2SPacket(int traderId) implements CustomP
         }
 
         @Override
-        public RequestTradingMaidScreenC2SPacket decode(FriendlyByteBuf buf) {
+        public @NotNull RequestTradingMaidScreenC2SPacket decode(FriendlyByteBuf buf) {
             return new RequestTradingMaidScreenC2SPacket(buf.readVarInt());
         }
     };

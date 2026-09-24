@@ -27,7 +27,7 @@ public record TradingMaidActionC2SPacket(int traderId, UUID maidId, Action actio
         }
 
         @Override
-        public TradingMaidActionC2SPacket decode(FriendlyByteBuf buf) {
+        public @NotNull TradingMaidActionC2SPacket decode(FriendlyByteBuf buf) {
             return new TradingMaidActionC2SPacket(buf.readVarInt(), buf.readUUID(), buf.readEnum(Action.class));
         }
     };

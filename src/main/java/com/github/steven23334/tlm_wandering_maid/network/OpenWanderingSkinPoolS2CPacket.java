@@ -30,7 +30,7 @@ public record OpenWanderingSkinPoolS2CPacket(List<String> selectedModels) implem
                 }
 
                 @Override
-                public OpenWanderingSkinPoolS2CPacket decode(FriendlyByteBuf buf) {
+                public @NotNull OpenWanderingSkinPoolS2CPacket decode(FriendlyByteBuf buf) {
                     int size = buf.readVarInt();
                     if (size < 0 || size > 512) {
                         throw new IllegalArgumentException("Invalid size: " + size);

@@ -28,7 +28,7 @@ public record WanderingMaidDecisionC2SPacket(UUID maidId, boolean accept)
                 }
 
                 @Override
-                public WanderingMaidDecisionC2SPacket decode(FriendlyByteBuf buf) {
+                public @NotNull WanderingMaidDecisionC2SPacket decode(FriendlyByteBuf buf) {
                     return new WanderingMaidDecisionC2SPacket(buf.readUUID(), buf.readBoolean());
                 }
             };

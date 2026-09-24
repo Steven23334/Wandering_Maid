@@ -116,8 +116,4 @@ public final class WanderingMaidSkinPoolScreen extends MaidModelGui {
         }
     }
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
 }

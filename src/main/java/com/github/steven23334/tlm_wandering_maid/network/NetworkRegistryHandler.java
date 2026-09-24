@@ -8,7 +8,6 @@ import com.github.steven23334.tlm_wandering_maid.compat.trade.TradingMaidActionC
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import com.github.steven23334.tlm_wandering_maid.network.UpdateWanderingSkinPoolC2SPacket;
 
 public final class NetworkRegistryHandler {
     private NetworkRegistryHandler() {

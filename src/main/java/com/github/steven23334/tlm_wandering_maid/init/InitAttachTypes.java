@@ -9,6 +9,7 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.attachment.IAttachmentHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -20,12 +21,12 @@ public class InitAttachTypes {
     /** 手动实现的同步处理器，兼容 21.1.192+。 */
     public static final AttachmentSyncHandler<Boolean> BOOL_SYNC_HANDLER = new AttachmentSyncHandler<>() {
         @Override
-        public void write(RegistryFriendlyByteBuf buf, Boolean attachment, boolean initialSync) {
+        public void write(RegistryFriendlyByteBuf buf, @NotNull Boolean attachment, boolean initialSync) {
             buf.writeBoolean(attachment);
         }
 
         @Override
-        public @Nullable Boolean read(IAttachmentHolder holder,
+        public @Nullable Boolean read(@NotNull IAttachmentHolder holder,
                                       RegistryFriendlyByteBuf buf,
                                       @Nullable Boolean previousValue) {
             return buf.readBoolean();

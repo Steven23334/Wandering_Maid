@@ -14,7 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,17 +64,6 @@ public final class MaidMovementControl {
         PURCHASE_MOVING
     }
 
-    public enum AbortCause {
-        NORMAL,
-        REPLACED,
-        DEATH,
-        REMOVED,
-        SERVER_STOPPING,
-        LOAD_RECOVERY,
-        INVALID_STATE,
-        REPAIR
-    }
-
     private MaidMovementControl() {
     }
 
@@ -124,69 +112,18 @@ public final class MaidMovementControl {
         cleanupRoot(maid, root);
     }
 
-    public static void abortAll(EntityMaid maid, AbortCause cause) {
-        if (!serverThread(maid)) {
-            return;
-        }
-        CompoundTag root = getRoot(maid, false);
-        if (root == null) {
-            return;
-        }
-        int active = activeMask(root.getCompound(REASONS));
-        restoreFields(maid, root.getCompound(BASELINE), active);
-        clearNavigation(maid);
-        maid.getPersistentData().remove(ROOT_KEY);
-        TRACKED.remove(maid.getUUID());
-        TlmWanderingMaidMod.LOGGER.debug("Aborted maid movement control: maid={}, cause={}, fields={}",
-                maid.getUUID(), cause, active);
-    }
-
     public static boolean isActive(EntityMaid maid, Reason reason) {
         CompoundTag root = getRoot(maid, false);
         return root != null && root.getCompound(REASONS).contains(reason.name(), Tag.TAG_INT);
-    }
-
-    public static boolean controlsPath(EntityMaid maid) {
-        return controls(maid, Field.PATH);
-    }
-
-    public static boolean controlsSchedule(EntityMaid maid) {
-        return controls(maid, Field.SCHEDULE);
     }
 
     public static boolean controlsPose(EntityMaid maid) {
         return controls(maid, Field.POSE);
     }
 
-    /** 查询除指定原因外，是否还有别的流程占用某项临时状态。 */
-    public static boolean controlsOther(EntityMaid maid, Reason excluded, Field field) {
-        CompoundTag root = getRoot(maid, false);
-        if (root == null) {
-            return false;
-        }
-        CompoundTag reasons = root.getCompound(REASONS);
-        for (String key : reasons.getAllKeys()) {
-            if (!key.equals(excluded.name()) && reasons.contains(key, Tag.TAG_INT)
-                    && has(reasons.getInt(key), field)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public static int activeMask(EntityMaid maid) {
         CompoundTag root = getRoot(maid, false);
         return root == null ? 0 : activeMask(root.getCompound(REASONS));
-    }
-
-    public static String describeReasons(EntityMaid maid) {
-        CompoundTag root = getRoot(maid, false);
-        return root == null ? "[]" : root.getCompound(REASONS).getAllKeys().toString();
-    }
-
-    public static CompoundTag baselineCopy(EntityMaid maid) {
-        CompoundTag root = getRoot(maid, false);
-        return root == null ? new CompoundTag() : root.getCompound(BASELINE).copy();
     }
 
     public static boolean hasValidBaseline(EntityMaid maid) {
@@ -225,44 +162,6 @@ public final class MaidMovementControl {
     public static long getDeadline(EntityMaid maid, Reason reason) {
         CompoundTag root = getRoot(maid, false);
         return root == null ? 0L : root.getLong("Deadline_" + reason.name());
-    }
-
-    /** 在 EntityMaid.addAdditionalSaveData TAIL 调用，直接净化即将写出的 TLM NBT。 */
-    public static void sanitizeSave(EntityMaid maid, CompoundTag outgoing) {
-        if (maid.level().isClientSide) {
-            return;
-        }
-        CompoundTag root = getRoot(maid, false);
-        if (root == null) {
-            return;
-        }
-        CompoundTag baseline = root.getCompound(BASELINE);
-        int fields = activeMask(root.getCompound(REASONS));
-        if (has(fields, Field.SCHEDULE)) {
-            outgoing.putBoolean("MaidIsHome", baseline.getBoolean("Home"));
-            if (baseline.contains("Schedule", Tag.TAG_COMPOUND)) {
-                outgoing.put("MaidSchedulePos", baseline.getCompound("Schedule").copy());
-            } else {
-                outgoing.putBoolean("MaidIsHome", false);
-                TlmWanderingMaidMod.LOGGER.warn("Missing schedule baseline while saving maid {}", maid.getUUID());
-            }
-        }
-        if (has(fields, Field.POSE)) {
-            outgoing.putBoolean("Sitting", baseline.getBoolean("Sitting"));
-        }
-        if (has(fields, Field.TASK)) {
-            String task = baseline.getString("Task");
-            outgoing.putString("MaidTask", ResourceLocation.tryParse(task) == null
-                    ? TaskManager.getIdleTask().getUid().toString() : task);
-        }
-        if (has(fields, Field.OWNER)) {
-            if (baseline.getBoolean("Tame") && baseline.hasUUID("Owner")) {
-                outgoing.putUUID("Owner", baseline.getUUID("Owner"));
-            } else {
-                outgoing.remove("Owner");
-            }
-        }
-        outgoing.put("ForgeData", maid.getPersistentData().copy());
     }
 
     /** 在 EntityMaid.readAdditionalSaveData TAIL 调用。普通临时流程一律中止；可恢复状态按严格规则处理。 */
@@ -330,33 +229,6 @@ public final class MaidMovementControl {
         if (getRoot(maid, false) != null) {
             TRACKED.put(maid.getUUID(), new WeakReference<>(maid));
         }
-    }
-
-    public static void abortTrackedOnServerStop() {
-        for (WeakReference<EntityMaid> reference : new ArrayList<>(TRACKED.values())) {
-            EntityMaid maid = reference.get();
-            if (maid != null && !maid.level().isClientSide) {
-                CompoundTag root = getRoot(maid, false);
-                if (root == null) {
-                    continue;
-                }
-                CompoundTag reasons = root.getCompound(REASONS);
-                for (String key : reasons.getAllKeys().toArray(String[]::new)) {
-                    boolean survivesRestart = key.equals(Reason.BETRAYAL.name())
-                            || key.equals(Reason.PANIC_HOLD.name())
-                            || key.equals(Reason.WANDERING_WAIT.name())
-                            || key.equals(Reason.PURCHASE_MOVING.name());
-                    if (!survivesRestart) {
-                        try {
-                            end(maid, Reason.valueOf(key));
-                        } catch (IllegalArgumentException ignored) {
-                            reasons.remove(key);
-                        }
-                    }
-                }
-            }
-        }
-        TRACKED.clear();
     }
 
     public static void clearNavigation(EntityMaid maid) {

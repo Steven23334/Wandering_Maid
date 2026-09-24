@@ -21,7 +21,7 @@ public record EnableTradingMaidButtonS2CPacket(int traderId) implements CustomPa
         }
 
         @Override
-        public EnableTradingMaidButtonS2CPacket decode(FriendlyByteBuf buf) {
+        public @NotNull EnableTradingMaidButtonS2CPacket decode(FriendlyByteBuf buf) {
             return new EnableTradingMaidButtonS2CPacket(buf.readVarInt());
         }
     };

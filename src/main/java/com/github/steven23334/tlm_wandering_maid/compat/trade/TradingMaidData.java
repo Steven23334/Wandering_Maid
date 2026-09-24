@@ -40,10 +40,6 @@ public final class TradingMaidData {
         return Math.max(1, maid.getPersistentData().getInt(PRICE));
     }
 
-    public static boolean purchaseAuthorized(EntityMaid maid) {
-        return maid.getPersistentData().getBoolean(PURCHASE_AUTHORIZED);
-    }
-
     public static void setPurchaseAuthorized(EntityMaid maid, boolean value) {
         if (value) {
             maid.getPersistentData().putBoolean(PURCHASE_AUTHORIZED, true);

@@ -40,11 +40,6 @@
   "bubble.tlm_wandering_maid.trade.new_owner": "从今天起，我就是您的人了。",
   "bubble.tlm_wandering_maid.trade.sold": "……再见了。",
 
-  "tooltip.tlm_wandering_maid.noeat_bauble": "佩戴后女仆不再进食。",
-  "tooltip.tlm_wandering_maid.moreeat_bauble": "佩戴后女仆可以吃得更多。",
-  "tooltip.tlm_wandering_maid.hunt_order": "用于指挥女仆狩猎。",
-  "tooltip.tlm_wandering_maid.disposable_favorability_tool_add": "一次性好感度工具。",
-
   "tlm_wandering_maid.configuration.masterSwitches": "总开关",
   "tlm_wandering_maid.configuration.wanderingMaidEnabled": "启用流浪女仆",
   "tlm_wandering_maid.configuration.wanderingTraderMaidTradeEnabled": "启用流浪商人女仆交易",
@@ -59,13 +54,7 @@
   "tlm_wandering_maid.configuration.wanderingTraderTradeWeight": "待售女仆生成权重",
   "tlm_wandering_maid.configuration.wanderingTraderTradePriceMin": "最低价格",
   "tlm_wandering_maid.configuration.wanderingTraderTradePriceMax": "最高价格",
-  "item.tlm_wandering_maid.noeat_bauble": "禁食饰品",
-  "item.tlm_wandering_maid.moreeat_bauble": "暴食饰品",
-  "item.tlm_wandering_maid.hunt_order": "狩猎指令",
   "item.tlm_wandering_maid.wandering_maid_book": "流浪女仆之书",
-  "item.tlm_wandering_maid.maid_seed": "女仆种子",
-  "item.tlm_wandering_maid.disposable_favorability_tool_add": "一次性好感工具",
-  "block.tlm_wandering_maid.maid_crop": "女仆作物",
   "gui.tlm_wandering_maid.skin_pool.count": "已选：%s",
   "gui.tlm_wandering_maid.skin_pool.legend": "点击模型切换选择",
   "gui.tlm_wandering_maid.skin_pool.help": "关闭界面自动保存",
@@ -80,5 +69,4 @@
   "gui.tlm_wandering_maid.wandering.request.hint": "选择接受可以将其收留，选择拒绝她会离开。",
   "gui.tlm_wandering_maid.wandering.request.accept": "接受",
   "gui.tlm_wandering_maid.wandering.request.reject": "拒绝"
-
 }

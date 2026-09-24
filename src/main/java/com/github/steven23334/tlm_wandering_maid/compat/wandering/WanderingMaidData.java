@@ -70,10 +70,9 @@ public final class WanderingMaidData {
         return maid.getPersistentData().getInt(ARRIVALS);
     }
 
-    public static int incrementArrivals(EntityMaid maid) {
+    public static void incrementArrivals(EntityMaid maid) {
         int value = arrivals(maid) + 1;
         maid.getPersistentData().putInt(ARRIVALS, value);
-        return value;
     }
 
     public static long stateSince(EntityMaid maid) {
