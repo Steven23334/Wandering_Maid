@@ -37,7 +37,7 @@ displayName="${mod_name}" #mandatory
 
 # A file name (in the root of the mod JAR) containing a logo for display
 #logoFile="examplemod.png" #optional
-
+logoFile="icon.png"
 # A text field displayed in the mod UI
 #credits="" #optional
 
@@ -46,7 +46,9 @@ displayName="${mod_name}" #mandatory
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Example mod description.
+Touhou Little Maid: Wandering Maid and Maid Trading is an addon for Touhou Little Maid that introduces two new ways to encounter maids. Wandering maids may appear in the wild and approach you on their own, sitting down and waiting for your answer — you can adopt them or reject them and let them leave. Wandering traders may also bring maids for sale, which you can buy with emeralds or sell your own maids to in exchange for favorability tools and rare loot. A built-in skin pool system lets you pre-select which models wandering and trading maids will use. Everything is configurable via the server config, and a command is available to manually trigger wandering maid events.
+
+TLM 流浪女仆与女仆交易 是车万女仆（Touhou Little Maid）的附属模组，为世界带来两种新的女仆邂逅方式。野外会随机出现主动靠近你的流浪女仆，她会在你面前坐下等待答复，你可以选择收留她，也可以拒绝让她离开；流浪商人身边则会出现待售女仆，你可以用绿宝石购买她们，也可以把自己的女仆卖给商人换取好感工具与稀有物资。模组内置皮肤池系统，流浪女仆与待售女仆的外观会从你预先选中的皮肤池中随机抽取。所有配置均可在服务端配置文件中调整，并支持通过指令手动触发流浪女仆事件。
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
