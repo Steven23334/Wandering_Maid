@@ -1,12 +1,10 @@
-# TLM-Wandering-Maid
-
-TLM Wandering Maid
 # Touhou Little Maid: Wandering Maid and Maid Trading
 
 [![Available on GitHub](https://wsrv.nl/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2F%40intergrav%2Fdevins-badges%403%2Fassets%2Fcozy%2Favailable%2Fgithub_vector.svg&n=-1)](https://github.com/Steven23334/Wandering_Maid)
 [![Available for Touhou Little Maid](https://cdn.modrinth.com/data/cached_images/ea5dc160571134bd0ea89ac52075b542fb331e46_0.webp)](https://modrinth.com/project/R0bDWFAW)
 
-This is an addon for the **Touhou Little Maid** mod. It introduces two new ways to encounter maids: wandering maids who seek you out in the wild, and wandering traders who bring maids for sale.
+This is an addon for the **Touhou Little Maid** mod. It introduces two new ways to encounter maids: wandering maids who seek you out in the wild, and wandering traders who bring maids for sale.   
+(This mod is derived from [Touhou Little Maid：Love & Loathe](https://www.curseforge.com/minecraft/mc-mods/touhou-little-maid-love-loathe).)
 
 ## 📦 New Content
 
@@ -70,7 +68,7 @@ Both mods provide their own config screens with feature toggles for maid behavio
 ## 🙏 Authors
 
 - Programmer: Steven23334
-
+- Original Programmer: JumDa5he
 ---
 
 # 车万女仆：流浪女仆与女仆交易
@@ -78,7 +76,8 @@ Both mods provide their own config screens with feature toggles for maid behavio
 [![可在 GitHub 上获取](https://wsrv.nl/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2F%40intergrav%2Fdevins-badges%403%2Fassets%2Fcozy%2Favailable%2Fgithub_vector.svg&n=-1)](https://github.com/Steven23334/Wandering_Maid)
 [![适用于车万女仆](https://cdn.modrinth.com/data/cached_images/ea5dc160571134bd0ea89ac52075b542fb331e46_0.webp)](https://modrinth.com/project/R0bDWFAW)
 
-这是一个为 **车万女仆 (Touhou Little Maid)** 模组开发的拓展，为世界带来两种新的女仆邂逅方式：在野外主动寻找你的流浪女仆，以及带着女仆前来售卖的流浪商人。
+这是一个为 **车万女仆 (Touhou Little Maid)** 模组开发的拓展，为世界带来两种新的女仆邂逅方式：在野外主动寻找你的流浪女仆，以及带着女仆前来售卖的流浪商人。   
+（此模组为[车万女仆：爱憎分明](https://www.curseforge.com/minecraft/mc-mods/touhou-little-maid-love-loathe)的衍生品。）
 
 ## 📦 新增内容
 
@@ -142,3 +141,4 @@ Both mods provide their own config screens with feature toggles for maid behavio
 ## 🙏 作者
 
 - 程序：Steven23334
+- 原作者: JumDa5he

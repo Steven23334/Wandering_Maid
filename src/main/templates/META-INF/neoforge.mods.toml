@@ -101,3 +101,9 @@ modId="callresponse"
 type="discouraged"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="touhou_little_maid"
+type="required"
+ordering="NONE"
+side="BOTH"
