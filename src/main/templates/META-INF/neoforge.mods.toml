@@ -107,3 +107,10 @@ modId="touhou_little_maid"
 type="required"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "steven_mod_api"
+type = "required"
+versionRange = "[1.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
