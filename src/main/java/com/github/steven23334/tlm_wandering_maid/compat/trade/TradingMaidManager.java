@@ -11,8 +11,8 @@ import com.github.tartaricacid.touhoulittlemaid.api.event.InteractMaidEvent;
 import com.github.tartaricacid.touhoulittlemaid.entity.info.ServerCustomPackLoader;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitItems;
-import com.github.tartaricacid.touhoulittlemaid.item.ItemMaidBed;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -27,10 +27,10 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.behavior.BehaviorUtils;
 import net.minecraft.world.entity.npc.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.Unbreakable;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.phys.AABB;
@@ -118,54 +118,32 @@ public final class TradingMaidManager {
         }
     }
 
+    // ★ 只保留 4 个交易项，仅 ultramarine_orb_elixir 打「无法破坏」
     private static void ensureCallResponseOffers(WanderingTrader trader) {
         if (trader.getPersistentData().getBoolean(ITEM_OFFERS_INITIALIZED)) {
             return;
         }
 
-        addOfferIfMissing(trader, ModItems.WANDERING_MAID_BOOK, 12);
-        addOfferIfMissing(trader, InitItems.SHRINE, 40 + trader.getRandom().nextInt(21));
-        int bedPrice = 4 + trader.getRandom().nextInt(5);
-        List<DyeColor> bedColors = List.of(DyeColor.WHITE, DyeColor.BLACK, DyeColor.YELLOW,
-                DyeColor.BLUE, DyeColor.GREEN, DyeColor.PURPLE);
-        DyeColor first = bedColors.get(trader.getRandom().nextInt(bedColors.size()));
-        DyeColor second;
-        do {
-            second = bedColors.get(trader.getRandom().nextInt(bedColors.size()));
-        } while (second == first);
-        addBedOfferIfMissing(trader, first, bedPrice);
-        addBedOfferIfMissing(trader, second, bedPrice);
-        addOfferIfMissing(trader, InitItems.SMART_SLAB_EMPTY, 8 + trader.getRandom().nextInt(9));
-        addOfferIfMissing(trader, InitItems.ULTRAMARINE_ORB_ELIXIR, 40);
-        addOfferIfMissing(trader, InitItems.EXPLOSION_PROTECT_BAUBLE, 20);
-        addOfferIfMissing(trader, InitItems.FIRE_PROTECT_BAUBLE, 18);
-        addOfferIfMissing(trader, InitItems.PROJECTILE_PROTECT_BAUBLE, 20);
-        addOfferIfMissing(trader, InitItems.MAGIC_PROTECT_BAUBLE, 24);
-        addOfferIfMissing(trader, InitItems.FALL_PROTECT_BAUBLE, 14);
-        addOfferIfMissing(trader, InitItems.DROWN_PROTECT_BAUBLE, 16);
-        addOfferIfMissing(trader, InitItems.NIMBLE_FABRIC, 24);
-        addOfferIfMissing(trader, InitItems.ITEM_MAGNET_BAUBLE, 28);
-        addOfferIfMissing(trader, InitItems.MUTE_BAUBLE, 12);
-        addOfferIfMissing(trader, InitItems.WIRELESS_IO, 32);
+        addOfferIfMissing(trader, ModItems.WANDERING_MAID_BOOK, 2, false);
+        addOfferIfMissing(trader, InitItems.SHRINE, 5 + trader.getRandom().nextInt(2), false);
+        addOfferIfMissing(trader, InitItems.SMART_SLAB_EMPTY, 1 , false);
+        addOfferIfMissing(trader, InitItems.ULTRAMARINE_ORB_ELIXIR, 25, true);   // ★ 唯一不可破坏
+
         trader.getPersistentData().putBoolean(ITEM_OFFERS_INITIALIZED, true);
     }
 
-    private static void addOfferIfMissing(WanderingTrader trader, Supplier<? extends Item> item, int price) {
+    /** ★ unbreakable 为 true 时给商品栈打上 UNBREAKABLE 组件。 */
+    private static void addOfferIfMissing(WanderingTrader trader, Supplier<? extends Item> item,
+                                          int price, boolean unbreakable) {
         if (trader.getOffers().stream().anyMatch(offer -> offer.getResult().is(item.get()))) {
             return;
         }
-        trader.getOffers().add(new MerchantOffer(new ItemCost(Items.EMERALD, price),
-                new ItemStack(item.get()), 8, 1, 0.05F));
-    }
-
-    private static void addBedOfferIfMissing(WanderingTrader trader, DyeColor color, int price) {
-        if (trader.getOffers().stream().anyMatch(offer -> offer.getResult().is(InitItems.MAID_BED.get())
-                && ItemMaidBed.getColor(offer.getResult()) == color)) {
-            return;
+        ItemStack result = new ItemStack(item.get());
+        if (unbreakable) {
+            result.set(DataComponents.UNBREAKABLE, new Unbreakable(true));
         }
-        ItemStack bed = new ItemStack(InitItems.MAID_BED.get());
-        ItemMaidBed.setColor(color, bed);
-        trader.getOffers().add(new MerchantOffer(new ItemCost(Items.EMERALD, price), bed, 8, 1, 0.05F));
+        trader.getOffers().add(new MerchantOffer(new ItemCost(Items.EMERALD, price),
+                result, 8, 1, 0.05F));
     }
 
     private static void spawnStockMaid(ServerLevel level, WanderingTrader trader, ServerPlayer skinOwner) {
@@ -562,7 +540,8 @@ public final class TradingMaidManager {
         }
     }
 
-    @SubscribeEvent    public void onTraderLeave(EntityLeaveLevelEvent event) {
+    @SubscribeEvent
+    public void onTraderLeave(EntityLeaveLevelEvent event) {
         if (!(event.getEntity() instanceof WanderingTrader trader)
                 || !(event.getLevel() instanceof ServerLevel level)) {
             return;

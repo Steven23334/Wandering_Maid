@@ -96,11 +96,6 @@ config = "${mod_id}.mixins.json"
 # stop your mod loading on the server for example.
 #[features.${mod_id}]
 #openGLVersion="[3.2,)"
-[[dependencies.${mod_id}]]
-modId="callresponse"
-type="discouraged"
-ordering="NONE"
-side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="touhou_little_maid"

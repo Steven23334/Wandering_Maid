@@ -122,7 +122,7 @@ configurations {
 }
 
 dependencies {
-    implementation 'com.github.steven23334.entity_uuid_copy:steven_mod_api:1.0.0'
+    implementation 'com.github.steven23334.tlm_wandering_maid:steven_mod_api-1.1.1'
     // NeoForge 项目直接使用 implementation
     implementation "maven.modrinth:touhou-little-maid:1.5.3-neoforge+mc1.21.1"
 

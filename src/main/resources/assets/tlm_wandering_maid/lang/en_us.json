@@ -3,14 +3,14 @@
 
   "message.tlm_wandering_maid.wandering.overworld_only": "Wandering maids can only spawn in the Overworld.",
   "message.tlm_wandering_maid.wandering.no_spawn_position": "No valid spawn position found nearby.",
-  "message.tlm_wandering_maid.wandering.spawned": "A wandering maid has appeared.",
+  "message.tlm_wandering_maid.wandering.appeared": "A wandering maid has appeared nearby: %s (~%s blocks away)",
+  "message.tlm_wandering_maid.wandering.spawned": "Summoned a wandering maid for you: %s (~%s blocks away)",
   "message.tlm_wandering_maid.wandering.arrived": "A wandering maid has arrived and is waiting for you.",
   "message.tlm_wandering_maid.wandering.rejected": "This wandering maid has already been rejected.",
   "message.tlm_wandering_maid.wandering.other_player": "This wandering maid is looking for someone else.",
   "message.tlm_wandering_maid.wandering.approaching": "The wandering maid is still on her way.",
   "message.tlm_wandering_maid.wandering.tame_failed": "The wandering maid refused your offer.",
   "message.tlm_wandering_maid.wandering.accepted": "You have adopted %s.",
-  "message.tlm_wandering_maid.wandering.disabled": "The wandering maid feature has been disabled by the administrator. New wandering maids cannot spawn.",
 
   "message.tlm_wandering_maid.trade.not_enough": "Requires %s emeralds.",
   "message.tlm_wandering_maid.trade.tame_failed": "Trade failed, the maid refused.",
@@ -54,6 +54,10 @@
   "tlm_wandering_maid.configuration.wanderingTraderTradeWeight": "Stock Spawn Weight",
   "tlm_wandering_maid.configuration.wanderingTraderTradePriceMin": "Min Price",
   "tlm_wandering_maid.configuration.wanderingTraderTradePriceMax": "Max Price",
+  "tlm_wandering_maid.configuration.wanderingMaidMaxAlive": "Maximum Alive Wandering Maids (Global)",
+  "tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupEnabled": "Auto-Cleanup Rejected Wandering Maids",
+  "tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupDelaySeconds": "Rejected Cleanup Delay (Seconds)",
+
   "item.tlm_wandering_maid.wandering_maid_book": "Wandering Maid Book",
   "gui.tlm_wandering_maid.skin_pool.count": "Selected: %s",
   "gui.tlm_wandering_maid.skin_pool.legend": "Click a model to toggle selection",

@@ -15,6 +15,11 @@ public class WanderingMaidConfig {
     public static final ModConfigSpec.IntValue WANDERING_MAID_INTERVAL_MINUTES;
     public static final ModConfigSpec.IntValue WANDERING_MAID_SPAWN_CHANCE;
     public static final ModConfigSpec.IntValue WANDERING_MAID_COUNT;
+    public static final ModConfigSpec.IntValue WANDERING_MAID_MAX_ALIVE;
+    /** ★ 新增：是否自动清除被拒绝的流浪女仆 */
+    public static final ModConfigSpec.BooleanValue WANDERING_MAID_REJECTED_CLEANUP_ENABLED;
+    /** ★ 新增：被拒绝后保留多少秒再清除 */
+    public static final ModConfigSpec.IntValue WANDERING_MAID_REJECTED_CLEANUP_DELAY_SECONDS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_MAID_DROP_BLACKLIST;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_MAID_DROP_WHITELIST;
 
@@ -64,7 +69,7 @@ public class WanderingMaidConfig {
                 .defineInRange("spawnIntervalMinutes", 5, 0, 60);
 
         WANDERING_MAID_SPAWN_CHANCE = builder
-                .comment("每次到达触发时间后，实际生成流浪女仆事件的概率（范围 0%~100%）")
+                .comment("每次到达触发时间后，实际生成流浪女仆事件的概率（范围 0%~100%）。每名玩家独立判定。")
                 .translation("tlm_wandering_maid.configuration.wanderingMaidSpawnChance")
                 .defineInRange("spawnChancePercent", 25, 0, 100);
 
@@ -72,6 +77,26 @@ public class WanderingMaidConfig {
                 .comment("每名玩家在一次流浪事件中生成的女仆数量（范围 1~10）")
                 .translation("tlm_wandering_maid.configuration.wanderingMaidCount")
                 .defineInRange("maidsPerPlayer", 1, 1, 10);
+
+        WANDERING_MAID_MAX_ALIVE = builder
+                .comment("全服同时存在的流浪女仆上限（范围 1~1024）。达到上限后自动事件不再生成；"
+                        + "指令 /tlm_wandering_maid wanderingmaid spawn 不受此限制。")
+                .translation("tlm_wandering_maid.configuration.wanderingMaidMaxAlive")
+                .defineInRange("maxAliveMaids", 12, 1, 1024);
+
+        // ★ 新增
+        WANDERING_MAID_REJECTED_CLEANUP_ENABLED = builder
+                .comment("是否自动清除被拒绝（REJECTED）的流浪女仆。"
+                        + "true：延迟结束后从世界中移除；"
+                        + "false：保留在世界中，可能长期堆积（旧行为）。")
+                .translation("tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupEnabled")
+                .define("rejectedCleanupEnabled", true);
+
+        WANDERING_MAID_REJECTED_CLEANUP_DELAY_SECONDS = builder
+                .comment("被拒绝后保留多少秒再清除（范围 0~600；0 表示立即清除）。"
+                        + "仅当上一条 rejectedCleanupEnabled 开启时生效。")
+                .translation("tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupDelaySeconds")
+                .defineInRange("rejectedCleanupDelaySeconds", 30, 0, 600);
 
         WANDERING_MAID_DROP_BLACKLIST = builder
                 .comment("流浪女仆死亡掉落与收留赠礼的物品黑名单。填写完整物品 ID，例如 minecraft:bedrock；可无限添加，黑名单优先于白名单")

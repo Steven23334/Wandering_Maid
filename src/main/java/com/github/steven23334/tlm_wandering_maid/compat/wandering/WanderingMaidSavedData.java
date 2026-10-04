@@ -21,7 +21,8 @@ import java.util.UUID;
 public final class WanderingMaidSavedData extends SavedData {
     public static final String DATA_NAME = "tlm_wandering_maid_wandering";
 
-    private long nextAttemptTick;
+    /** ★ per-player 计时器：玩家 UUID → 下次允许触发事件的 gameTime */
+    private final Map<UUID, Long> nextAttemptTicks = new HashMap<>();
     private final Map<UUID, List<String>> skinPools = new HashMap<>();
 
     public static WanderingMaidSavedData get(ServerLevel overworld) {
@@ -34,7 +35,17 @@ public final class WanderingMaidSavedData extends SavedData {
 
     public static WanderingMaidSavedData load(CompoundTag tag, HolderLookup.Provider provider) {
         WanderingMaidSavedData data = new WanderingMaidSavedData();
-        data.nextAttemptTick = tag.getLong("NextAttemptTick");
+
+        // 兼容旧存档：曾经写过的单值 "NextAttemptTick" 被忽略（无 per-player 归属，只能丢弃）
+        // 新版写 "NextAttemptTicks" 列表
+        ListTag attempts = tag.getList("NextAttemptTicks", Tag.TAG_COMPOUND);
+        for (int i = 0; i < attempts.size(); i++) {
+            CompoundTag entry = attempts.getCompound(i);
+            if (entry.hasUUID("Player")) {
+                data.nextAttemptTicks.put(entry.getUUID("Player"), entry.getLong("Tick"));
+            }
+        }
+
         ListTag pools = tag.getList("SkinPools", Tag.TAG_COMPOUND);
         for (int i = 0; i < pools.size(); i++) {
             CompoundTag entry = pools.getCompound(i);
@@ -53,7 +64,15 @@ public final class WanderingMaidSavedData extends SavedData {
 
     @Override
     public @NotNull CompoundTag save(CompoundTag tag, HolderLookup.@NotNull Provider provider) {
-        tag.putLong("NextAttemptTick", nextAttemptTick);
+        ListTag attempts = new ListTag();
+        nextAttemptTicks.forEach((uuid, tick) -> {
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("Player", uuid);
+            entry.putLong("Tick", tick);
+            attempts.add(entry);
+        });
+        tag.put("NextAttemptTicks", attempts);
+
         ListTag pools = new ListTag();
         skinPools.forEach((player, models) -> {
             CompoundTag entry = new CompoundTag();
@@ -67,13 +86,22 @@ public final class WanderingMaidSavedData extends SavedData {
         return tag;
     }
 
-    public long nextAttemptTick() {
-        return nextAttemptTick;
+    /** 读某个玩家的下次触发时刻；没记录过返回 0。 */
+    public long nextAttemptTick(UUID player) {
+        return nextAttemptTicks.getOrDefault(player, 0L);
     }
 
-    public void setNextAttemptTick(long value) {
-        nextAttemptTick = value;
+    /** 写某个玩家的下次触发时刻。 */
+    public void setNextAttemptTick(UUID player, long value) {
+        nextAttemptTicks.put(player, value);
         setDirty();
+    }
+
+    /** 清理某个玩家的记录（可选：玩家被 ban / 永久移除时可调用）。 */
+    public void clearNextAttempt(UUID player) {
+        if (nextAttemptTicks.remove(player) != null) {
+            setDirty();
+        }
     }
 
     public List<String> skinPool(UUID player) {

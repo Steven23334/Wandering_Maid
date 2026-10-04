@@ -6,6 +6,7 @@ import com.github.steven23334.tlm_wandering_maid.mixin.accessor.EntityMaidTameIn
 import com.github.steven23334.tlm_wandering_maid.network.OpenWanderingMaidRequestS2CPacket;
 import com.github.tartaricacid.touhoulittlemaid.entity.info.ServerCustomPackLoader;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
@@ -29,9 +30,13 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -62,6 +67,11 @@ public final class WanderingMaidManager {
     private static final long APPROACH_TIMEOUT = 20L * 90L;
     private static final int SPAWN_GLOW_DURATION = 20 * 60;
 
+    /** ★ 优先在玩家面朝方向 ±60° 扇区内尝试次数；失败后回退全方向。 */
+    private static final int FORWARD_ATTEMPTS = 18;
+    private static final int ANYWHERE_ATTEMPTS = 24;
+    private static final double FORWARD_HALF_ARC_DEG = 60.0;
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onWanderingMaidTick(EntityTickEvent.Pre event) {
         if (event.getEntity() instanceof EntityMaid maid && !maid.level().isClientSide
@@ -80,7 +90,7 @@ public final class WanderingMaidManager {
         // ★ 已存在的流浪女仆始终跑状态机，不受总开关影响
         tickAllWanderingMaids(level, data, gameTime);
 
-        // ★ 总开关关闭时，只跳过自动生成，不影响上面已经执行的 tickAllWanderingMaids
+        // ★ 总开关关闭时，只跳过自动生成
         if (!WanderingMaidConfig.WANDERING_MAID_ENABLED.get()) {
             return;
         }
@@ -89,25 +99,31 @@ public final class WanderingMaidManager {
         if (interval <= 0) {
             return;
         }
-        if (data.nextAttemptTick() <= 0 || data.nextAttemptTick() > gameTime + interval) {
-            data.setNextAttemptTick(gameTime + interval);
-        }
-        if (gameTime < data.nextAttemptTick()) {
-            return;
-        }
-        data.setNextAttemptTick(gameTime + interval);
-
         if (!level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)) {
-            return;
-        }
-        if (level.getRandom().nextInt(100) >= WanderingMaidConfig.WANDERING_MAID_SPAWN_CHANCE.get()) {
             return;
         }
 
         List<ServerPlayer> candidates = level.players().stream()
                 .filter(player -> !player.isSpectator() && player.isAlive())
                 .toList();
+
+        // ★ 每个玩家各走各的计时器，互不干扰
         for (ServerPlayer player : candidates) {
+            UUID id = player.getUUID();
+            long next = data.nextAttemptTick(id);
+
+            if (next <= 0 || next > gameTime + interval) {
+                data.setNextAttemptTick(id, gameTime + interval);
+                continue;
+            }
+            if (gameTime < next) {
+                continue;
+            }
+            data.setNextAttemptTick(id, gameTime + interval);
+
+            if (level.getRandom().nextInt(100) >= WanderingMaidConfig.WANDERING_MAID_SPAWN_CHANCE.get()) {
+                continue;
+            }
             spawnEventForPlayer(player, false);
         }
     }
@@ -121,14 +137,37 @@ public final class WanderingMaidManager {
     }
 
     private static int spawnEventForPlayer(ServerPlayer player, boolean commandTriggered) {
+        int alive = countAliveSpecial(player.serverLevel());
+
+        int room;
+        if (commandTriggered) {
+            room = WanderingMaidConfig.WANDERING_MAID_COUNT.get();
+        } else {
+            int maxAlive = WanderingMaidConfig.WANDERING_MAID_MAX_ALIVE.get();
+            room = maxAlive - alive;
+            if (room <= 0) {
+                return 0;
+            }
+        }
+
+        int targets = Math.min(WanderingMaidConfig.WANDERING_MAID_COUNT.get(), room);
         int successes = 0;
-        int count = WanderingMaidConfig.WANDERING_MAID_COUNT.get();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < targets; i++) {
             if (spawnSingleForPlayer(player, commandTriggered && i == 0)) {
                 successes++;
             }
         }
         return successes;
+    }
+
+    private static int countAliveSpecial(ServerLevel level) {
+        int count = 0;
+        for (Entity entity : level.getEntities().getAll()) {
+            if (entity instanceof EntityMaid maid && maid.isAlive() && WanderingMaidData.isSpecial(maid)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private static boolean spawnSingleForPlayer(ServerPlayer player, boolean commandTriggered) {
@@ -140,7 +179,7 @@ public final class WanderingMaidManager {
             }
             return false;
         }
-        BlockPos spawnPos = findSpawnPosition(level, player.blockPosition());
+        BlockPos spawnPos = findSpawnPosition(level, player);
         if (spawnPos == null) {
             if (commandTriggered) {
                 player.sendSystemMessage(Component.translatable(
@@ -167,10 +206,16 @@ public final class WanderingMaidManager {
         }
         MaidMovementControl.begin(maid, MaidMovementControl.Reason.WANDERING_WAIT,
                 EnumSet.of(MaidMovementControl.Field.PATH, MaidMovementControl.Field.POSE));
-        if (commandTriggered) {
-            player.sendSystemMessage(Component.translatable(
-                    "message.tlm_wandering_maid.wandering.spawned"));
-        }
+
+        double distance = Math.sqrt(player.distanceToSqr(maid));
+        Component message = Component.translatable(
+                        commandTriggered
+                                ? "message.tlm_wandering_maid.wandering.spawned"
+                                : "message.tlm_wandering_maid.wandering.appeared",
+                        maid.getName(),
+                        String.format("%.1f", distance))
+                .withStyle(ChatFormatting.GOLD);   // ★ 整条消息金色
+        player.sendSystemMessage(message);
         return true;
     }
 
@@ -184,36 +229,95 @@ public final class WanderingMaidManager {
         return available.contains(DEFAULT_MODEL) ? DEFAULT_MODEL : available.stream().findFirst().orElse(DEFAULT_MODEL);
     }
 
-    private static BlockPos findSpawnPosition(ServerLevel level, BlockPos center) {
-        for (int attempt = 0; attempt < 24; attempt++) {
-            double angle = level.getRandom().nextDouble() * Math.PI * 2.0;
+    // ============================================================
+    // 出生点查找：第一轮「面朝 ±60° 扇区 + 视线无遮挡」，第二轮全方向兜底
+    // ============================================================
+
+    private static BlockPos findSpawnPosition(ServerLevel level, ServerPlayer player) {
+        Vec3 eye = player.getEyePosition();
+        double baseAngle = Math.toRadians(player.getYRot()) + Math.PI / 2.0;
+
+        BlockPos forward = tryFindSpawn(level, player.blockPosition(), eye,
+                baseAngle, Math.toRadians(FORWARD_HALF_ARC_DEG), FORWARD_ATTEMPTS);
+        if (forward != null) {
+            return forward;
+        }
+        return tryFindSpawn(level, player.blockPosition(), eye,
+                0.0, Math.PI, ANYWHERE_ATTEMPTS);
+    }
+
+    private static BlockPos tryFindSpawn(ServerLevel level, BlockPos center, Vec3 eye,
+                                         double baseAngle, double halfArc, int attempts) {
+        for (int attempt = 0; attempt < attempts; attempt++) {
+            double angle;
+            if (halfArc >= Math.PI) {
+                angle = level.getRandom().nextDouble() * Math.PI * 2.0;
+            } else {
+                double offset = (level.getRandom().nextDouble() * 2.0 - 1.0) * halfArc;
+                angle = baseAngle + offset;
+            }
             int distance = Mth.nextInt(level.getRandom(), SEARCH_MIN_RADIUS, SEARCH_MAX_RADIUS);
             int x = center.getX() + Mth.floor(Math.cos(angle) * distance);
             int z = center.getZ() + Mth.floor(Math.sin(angle) * distance);
+
             BlockPos column = new BlockPos(x, center.getY(), z);
-            if (!level.hasChunkAt(column) || !level.getWorldBorder().isWithinBounds(column)) {
+            if (!level.isLoaded(column) || !level.getWorldBorder().isWithinBounds(column)) {
                 continue;
             }
             int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
             BlockPos pos = new BlockPos(x, y, z);
+
             if (!level.getFluidState(pos).isEmpty() || !level.getFluidState(pos.above()).isEmpty()) {
                 continue;
             }
             if (!level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)) {
                 continue;
             }
-            if (level.isEmptyBlock(pos) && level.isEmptyBlock(pos.above())) {
-                return pos;
+            if (!level.isEmptyBlock(pos) || !level.isEmptyBlock(pos.above())) {
+                continue;
             }
+            Vec3 target = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            if (!hasLineOfSight(level, eye, target)) {
+                continue;
+            }
+            return pos;
         }
         return null;
     }
 
+    private static boolean hasLineOfSight(ServerLevel level, Vec3 from, Vec3 to) {
+        ClipContext ctx = new ClipContext(from, to,
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty());
+        BlockHitResult hit = level.clip(ctx);
+        return hit.getType() == HitResult.Type.MISS;
+    }
+
+    // ============================================================
+    // 状态机与其余逻辑
+    // ============================================================
+
     private static void tickAllWanderingMaids(ServerLevel level, WanderingMaidSavedData savedData, long gameTime) {
+        // ★ 循环外读一次配置，避免每个实体每 tick 都查 config
+        boolean cleanupEnabled = WanderingMaidConfig.WANDERING_MAID_REJECTED_CLEANUP_ENABLED.get();
+        long cleanupDelayTicks = WanderingMaidConfig.WANDERING_MAID_REJECTED_CLEANUP_DELAY_SECONDS.get() * 20L;
+
         for (Entity entity : level.getEntities().getAll()) {
             if (!(entity instanceof EntityMaid maid) || !maid.isAlive() || !WanderingMaidData.isSpecial(maid)) {
                 continue;
             }
+
+            // ★ REJECTED：按配置在延迟后清除（关闭开关则保留）
+            if (WanderingMaidData.state(maid) == WanderingMaidState.REJECTED) {
+                long rejectAt = WanderingMaidData.rejectAt(maid);
+                if (rejectAt <= 0) {
+                    // 老存档遗留：以「现在」为起点，让它开始倒计时
+                    WanderingMaidData.markRejectAt(maid, gameTime);
+                } else if (cleanupEnabled && gameTime - rejectAt >= cleanupDelayTicks) {
+                    maid.discard();
+                }
+                continue;
+            }
+
             if (!WanderingMaidData.mayAccept(maid)) {
                 enforceWildState(maid);
             }
@@ -327,10 +431,12 @@ public final class WanderingMaidManager {
     }
 
     private static void expire(EntityMaid maid, WanderingMaidSavedData savedData) {
+        WanderingMaidData.markRejectAt(maid, maid.level().getGameTime());   // ★ 新增
         rejectPermanently(maid, savedData, maid.level().getGameTime());
     }
 
     private static void rejectPermanently(EntityMaid maid, WanderingMaidSavedData savedData, long gameTime) {
+        WanderingMaidData.markRejectAt(maid, gameTime);   // ★ 新增（幂等，不会覆盖）
         stopNavigation(maid);
         MaidMovementControl.end(maid, MaidMovementControl.Reason.WANDERING_WAIT);
         maid.setInSittingPose(false);
@@ -351,7 +457,6 @@ public final class WanderingMaidManager {
                 || !WanderingMaidData.isSpecial(maid)) {
             return;
         }
-        // ★ 不再检查 WANDERING_MAID_ENABLED：总开关关闭时，已存在的女仆仍然可以交互
         if (!WanderingMaidData.mayAccept(maid)) {
             enforceWildState(maid);
         }
@@ -401,6 +506,7 @@ public final class WanderingMaidManager {
         } else {
             maid.setInSittingPose(false);
             maid.setBegging(false);
+            WanderingMaidData.markRejectAt(maid, level.getGameTime());   // ★ 新增
             WanderingMaidData.setState(maid, WanderingMaidState.LEAVING, level.getGameTime());
         }
     }
@@ -420,6 +526,7 @@ public final class WanderingMaidManager {
                 player.sendSystemMessage(Component.translatable(
                         "message.tlm_wandering_maid.wandering.accepted", maid.getName()));
                 giveRandomItems(player, (ServerLevel) maid.level(), 2);
+                maid.getChatBubbleManager().addTextChatBubble("bubble.tlm_wandering_maid.trade.new_owner");
                 return;
             }
         } finally {

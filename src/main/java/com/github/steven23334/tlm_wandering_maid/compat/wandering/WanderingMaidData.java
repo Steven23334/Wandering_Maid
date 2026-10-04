@@ -4,6 +4,7 @@ import com.github.steven23334.tlm_wandering_maid.TlmWanderingMaidMod;
 import com.github.steven23334.tlm_wandering_maid.init.InitAttachTypes;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -18,6 +19,7 @@ public final class WanderingMaidData {
     private static final String LAST_PROGRESS = PREFIX + "last_progress";
     private static final String CLOSEST_DISTANCE = PREFIX + "closest_distance";
     private static final String ACCEPT_AUTHORIZED = PREFIX + "accept_authorized";
+    private static final String REJECT_AT = PREFIX + "reject_at";   // ★ 新增
 
     private WanderingMaidData() {
     }
@@ -79,6 +81,23 @@ public final class WanderingMaidData {
         return maid.getPersistentData().getLong(STATE_SINCE);
     }
 
+    /** 读取「被拒绝的那一刻」的 gameTime；从未拒绝过返回 0。 */
+    public static long rejectAt(EntityMaid maid) {
+        return maid.getPersistentData().getLong(REJECT_AT);
+    }
+
+    /**
+     * 标记「被拒绝的那一刻」。幂等：只写入一次，后续调用不覆盖。
+     * 这样「主动拒绝」和「自动过期」两条路径共享同一个起点，
+     * 跨 LEAVING / REJECTED 两个状态都能正确计时。
+     */
+    public static void markRejectAt(EntityMaid maid, long gameTime) {
+        CompoundTag tag = maid.getPersistentData();
+        if (!tag.contains(REJECT_AT, Tag.TAG_LONG)) {
+            tag.putLong(REJECT_AT, gameTime);
+        }
+    }
+
     public static long lastProgress(EntityMaid maid) {
         return maid.getPersistentData().getLong(LAST_PROGRESS);
     }
@@ -104,5 +123,6 @@ public final class WanderingMaidData {
         tag.remove(LAST_PROGRESS);
         tag.remove(CLOSEST_DISTANCE);
         tag.remove(ACCEPT_AUTHORIZED);
+        tag.remove(REJECT_AT);   // ★ 新增
     }
 }
