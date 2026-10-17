@@ -34,6 +34,11 @@ public final class NetworkRegistryHandler {
                 UpdateWanderingSkinPoolC2SPacket.TYPE,
                 UpdateWanderingSkinPoolC2SPacket.STREAM_CODEC,
                 UpdateWanderingSkinPoolC2SPacket::handle);
+        // ★ 新增：玩家个人开关
+        registrar.playToServer(
+                UpdateWanderingMaidToggleC2SPacket.TYPE,
+                UpdateWanderingMaidToggleC2SPacket.STREAM_CODEC,
+                UpdateWanderingMaidToggleC2SPacket::handle);
 
         // 交易女仆
         registrar.playToClient(

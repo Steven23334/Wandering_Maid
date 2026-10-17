@@ -1,5 +1,6 @@
 package com.github.steven23334.tlm_wandering_maid.compat.wandering;
 
+import com.github.steven23334.tlm_wandering_maid.config.WanderingMaidConfig; // ★ 新增导入
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -9,14 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public final class WanderingMaidSavedData extends SavedData {
     public static final String DATA_NAME = "tlm_wandering_maid_wandering";
@@ -24,6 +18,9 @@ public final class WanderingMaidSavedData extends SavedData {
     /** ★ per-player 计时器：玩家 UUID → 下次允许触发事件的 gameTime */
     private final Map<UUID, Long> nextAttemptTicks = new HashMap<>();
     private final Map<UUID, List<String>> skinPools = new HashMap<>();
+
+    // ★ 将原来的 Set<UUID> disabledPlayers 替换为 Map 记录玩家明确的选择
+    private final Map<UUID, Boolean> playerToggles = new HashMap<>();
 
     public static WanderingMaidSavedData get(ServerLevel overworld) {
         return overworld.getDataStorage().computeIfAbsent(
@@ -59,6 +56,26 @@ public final class WanderingMaidSavedData extends SavedData {
             }
             data.skinPools.put(entry.getUUID("Player"), ids);
         }
+
+        // ★ 1. 读取新版玩家选择记录
+        ListTag toggles = tag.getList("PlayerToggles", Tag.TAG_COMPOUND);
+        for (int i = 0; i < toggles.size(); i++) {
+            CompoundTag entry = toggles.getCompound(i);
+            if (entry.hasUUID("Player")) {
+                data.playerToggles.put(entry.getUUID("Player"), entry.getBoolean("Enabled"));
+            }
+        }
+
+        // ★ 2. 兼容旧存档中的黑名单（如果读到旧的黑名单，说明玩家当时是关闭的）
+        ListTag disabled = tag.getList("DisabledPlayers", Tag.TAG_COMPOUND);
+        for (int i = 0; i < disabled.size(); i++) {
+            CompoundTag entry = disabled.getCompound(i);
+            if (entry.hasUUID("Player")) {
+                // 旧存档里在黑名单 = 明确关闭
+                data.playerToggles.put(entry.getUUID("Player"), false);
+            }
+        }
+
         return data;
     }
 
@@ -83,6 +100,19 @@ public final class WanderingMaidSavedData extends SavedData {
             pools.add(entry);
         });
         tag.put("SkinPools", pools);
+
+        // ★ 3. 保存新版玩家选择记录
+        ListTag toggles = new ListTag();
+        playerToggles.forEach((uuid, enabled) -> {
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("Player", uuid);
+            entry.putBoolean("Enabled", enabled);
+            toggles.add(entry);
+        });
+        tag.put("PlayerToggles", toggles);
+
+        // 注意：不再写入 DisabledPlayers，因为已经迁移到了 PlayerToggles 中
+
         return tag;
     }
 
@@ -115,6 +145,27 @@ public final class WanderingMaidSavedData extends SavedData {
         } else {
             skinPools.put(player, List.copyOf(distinct));
         }
+        setDirty();
+    }
+
+    /**
+     * 获取玩家个人开关状态：
+     * 如果玩家手动设置过，返回玩家的设置；
+     * 否则，返回服务端配置文件里的默认值。
+     */
+    public boolean isEnabledFor(UUID player) {
+        Boolean toggle = playerToggles.get(player);
+        if (toggle != null) {
+            return toggle;
+        }
+        return WanderingMaidConfig.WANDERING_MAID_DEFAULT_ENABLED.get();
+    }
+
+    /**
+     * 设置玩家个人开关状态并保存
+     */
+    public void setEnabledFor(UUID player, boolean enabled) {
+        playerToggles.put(player, enabled);
         setDirty();
     }
 }

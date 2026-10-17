@@ -1,5 +1,6 @@
 package com.github.steven23334.tlm_wandering_maid.compat.client.gui;
 
+import com.github.steven23334.tlm_wandering_maid.network.UpdateWanderingMaidToggleC2SPacket;
 import com.github.steven23334.tlm_wandering_maid.network.UpdateWanderingSkinPoolC2SPacket;
 import com.github.tartaricacid.touhoulittlemaid.client.gui.entity.model.MaidModelGui;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.pojo.MaidModelInfo;
@@ -7,7 +8,9 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Collection;
@@ -18,24 +21,53 @@ import java.util.Set;
 public final class WanderingMaidSkinPoolScreen extends MaidModelGui {
     private final Set<String> selectedModels;
     private boolean dirty;
+    private boolean enabled;
 
-    private WanderingMaidSkinPoolScreen(EntityMaid previewMaid, Collection<String> selectedModels) {
+    private WanderingMaidSkinPoolScreen(EntityMaid previewMaid, Collection<String> selectedModels, boolean enabled) {
         super(previewMaid);
         this.selectedModels = new LinkedHashSet<>(selectedModels);
+        this.enabled = enabled;
         if (!this.selectedModels.isEmpty()) {
             previewMaid.setModelId(this.selectedModels.iterator().next());
         }
     }
 
-    public static void open(Collection<String> selectedModels) {
+    public static void open(Collection<String> selectedModels, boolean enabled) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {
             return;
         }
         EntityMaid preview = EntityMaid.TYPE.create(minecraft.level);
         if (preview != null) {
-            minecraft.setScreen(new WanderingMaidSkinPoolScreen(preview, selectedModels));
+            minecraft.setScreen(new WanderingMaidSkinPoolScreen(preview, selectedModels, enabled));
         }
+    }
+
+    @Override
+    public void init() {
+        super.init();
+
+        // 1. 准备文本
+        MutableComponent enableText = Component.translatable("gui.tlm_wandering_maid.skin_pool.toggle_prefix")
+                .withStyle(ChatFormatting.WHITE);
+
+        // 2. 直接指定左边框的 X 坐标（屏幕宽度的 1/11 处，绝对不超出）
+        int xOffset = this.width / 11;
+
+        // 3. 直接指定 Y 坐标
+        int yOffset = (this.height / 8) * 7;
+
+        // 4. 构建原版复选框
+        Checkbox cacheCheckBox = Checkbox.builder(enableText, this.font)
+                .pos(xOffset, yOffset)
+                .selected(this.enabled)
+                .onValueChange((checkBox, value) -> {
+                    this.enabled = value;
+                    PacketDistributor.sendToServer(new UpdateWanderingMaidToggleC2SPacket(value));
+                })
+                .build();
+
+        this.addRenderableWidget(cacheCheckBox);
     }
 
     @Override
@@ -115,5 +147,4 @@ public final class WanderingMaidSkinPoolScreen extends MaidModelGui {
             dirty = false;
         }
     }
-
 }

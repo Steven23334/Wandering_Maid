@@ -23,8 +23,11 @@ public final class WanderingMaidBookItem extends Item {
                 && serverPlayer.getServer() != null) {
             WanderingMaidSavedData data =
                     WanderingMaidSavedData.get(serverPlayer.getServer().overworld());
+            // ★ 带上当前开关状态
             PacketDistributor.sendToPlayer(serverPlayer,
-                    new OpenWanderingSkinPoolS2CPacket(data.skinPool(serverPlayer.getUUID())));
+                    new OpenWanderingSkinPoolS2CPacket(
+                            data.skinPool(serverPlayer.getUUID()),
+                            data.isEnabledFor(serverPlayer.getUUID())));
         }
         return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
     }

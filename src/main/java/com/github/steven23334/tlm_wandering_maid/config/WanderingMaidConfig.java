@@ -22,6 +22,7 @@ public class WanderingMaidConfig {
     public static final ModConfigSpec.IntValue WANDERING_MAID_REJECTED_CLEANUP_DELAY_SECONDS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_MAID_DROP_BLACKLIST;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_MAID_DROP_WHITELIST;
+    public static final ModConfigSpec.BooleanValue WANDERING_MAID_DEFAULT_ENABLED;
 
     // ===== 流浪商人女仆交易（外层）=====
     public static final ModConfigSpec.IntValue WANDERING_TRADER_MAID_TRADE_WEIGHT;
@@ -62,6 +63,11 @@ public class WanderingMaidConfig {
         builder.comment("流浪女仆事件配置")
                 .translation("tlm_wandering_maid.configuration.wanderingMaid")
                 .push("wandering_maid");
+
+        WANDERING_MAID_DEFAULT_ENABLED = builder
+                .comment("新玩家默认是否开启流浪女仆事件。玩家可以在游戏内的流浪女仆之书中单独修改。")
+                .translation("tlm_wandering_maid.configuration.wanderingMaidDefaultEnabled")
+                .define("defaultEnabled", true);
 
         WANDERING_MAID_INTERVAL_MINUTES = builder
                 .comment("每隔多少分钟尝试触发一次流浪女仆事件（范围 0~60 分钟；0 表示关闭自动触发，指令触发不受影响）")

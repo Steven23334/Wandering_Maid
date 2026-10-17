@@ -30,13 +30,9 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.CollisionContext;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -57,8 +53,8 @@ import java.util.UUID;
 
 public final class WanderingMaidManager {
     public static final String DEFAULT_MODEL = "geckolib:winefox";
-    private static final int SEARCH_MIN_RADIUS = 24;
-    private static final int SEARCH_MAX_RADIUS = 48;
+    private static final int SEARCH_MIN_RADIUS = 12;
+    private static final int SEARCH_MAX_RADIUS = 32;
     private static final int MAX_ARRIVALS = 3;
     private static final double ARRIVE_DISTANCE = 1.5;
     private static final double RETRY_DISTANCE = 5.0;
@@ -119,7 +115,13 @@ public final class WanderingMaidManager {
             if (gameTime < next) {
                 continue;
             }
+            // 到点：重排下一次（无论后面是否真的生成，都推进计时器）
             data.setNextAttemptTick(id, gameTime + interval);
+
+            // ★ 玩家个人开关：关闭时直接跳过，不消耗概率、不生成
+            if (!data.isEnabledFor(id)) {
+                continue;
+            }
 
             if (level.getRandom().nextInt(100) >= WanderingMaidConfig.WANDERING_MAID_SPAWN_CHANCE.get()) {
                 continue;
@@ -276,20 +278,9 @@ public final class WanderingMaidManager {
             if (!level.isEmptyBlock(pos) || !level.isEmptyBlock(pos.above())) {
                 continue;
             }
-            Vec3 target = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-            if (!hasLineOfSight(level, eye, target)) {
-                continue;
-            }
             return pos;
         }
         return null;
-    }
-
-    private static boolean hasLineOfSight(ServerLevel level, Vec3 from, Vec3 to) {
-        ClipContext ctx = new ClipContext(from, to,
-                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty());
-        BlockHitResult hit = level.clip(ctx);
-        return hit.getType() == HitResult.Type.MISS;
     }
 
     // ============================================================

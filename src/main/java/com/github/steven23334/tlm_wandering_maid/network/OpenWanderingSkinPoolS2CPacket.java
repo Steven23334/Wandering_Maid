@@ -15,7 +15,8 @@ import java.util.List;
 /**
  * 服务端 -> 客户端：打开皮肤池 UI（只带已选，候选由 MaidModelGui 自己提供）。
  */
-public record OpenWanderingSkinPoolS2CPacket(List<String> selectedModels) implements CustomPacketPayload {
+public record OpenWanderingSkinPoolS2CPacket(List<String> selectedModels, boolean enabledForPlayer)
+        implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<OpenWanderingSkinPoolS2CPacket> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(
@@ -27,6 +28,7 @@ public record OpenWanderingSkinPoolS2CPacket(List<String> selectedModels) implem
                 public void encode(FriendlyByteBuf buf, OpenWanderingSkinPoolS2CPacket pkt) {
                     buf.writeVarInt(Math.min(pkt.selectedModels.size(), 512));
                     pkt.selectedModels.stream().limit(512).forEach(id -> buf.writeUtf(id, 256));
+                    buf.writeBoolean(pkt.enabledForPlayer);   // ★ 新增
                 }
 
                 @Override
@@ -39,12 +41,14 @@ public record OpenWanderingSkinPoolS2CPacket(List<String> selectedModels) implem
                     for (int i = 0; i < size; i++) {
                         models.add(buf.readUtf(256));
                     }
-                    return new OpenWanderingSkinPoolS2CPacket(models);
+                    boolean enabled = buf.readBoolean();   // ★ 新增
+                    return new OpenWanderingSkinPoolS2CPacket(models, enabled);
                 }
             };
 
     public static void handle(OpenWanderingSkinPoolS2CPacket message, IPayloadContext context) {
-        context.enqueueWork(() -> WanderingMaidSkinPoolScreen.open(message.selectedModels));
+        context.enqueueWork(() ->
+                WanderingMaidSkinPoolScreen.open(message.selectedModels, message.enabledForPlayer));
     }
 
     @Override
