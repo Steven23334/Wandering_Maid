@@ -20,6 +20,10 @@ public class WanderingMaidConfig {
     public static final ModConfigSpec.BooleanValue WANDERING_MAID_REJECTED_CLEANUP_ENABLED;
     /** ★ 新增：被拒绝后保留多少秒再清除 */
     public static final ModConfigSpec.IntValue WANDERING_MAID_REJECTED_CLEANUP_DELAY_SECONDS;
+    /** ★ 新增：收养流浪女仆时是否给予随机赠礼 */
+    public static final ModConfigSpec.BooleanValue WANDERING_MAID_ADOPT_GIFT_ENABLED;
+    /** ★ 新增：玩家杀死流浪女仆时是否额外掉落随机物品 */
+    public static final ModConfigSpec.BooleanValue WANDERING_MAID_DEATH_DROP_ENABLED;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_MAID_DROP_BLACKLIST;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WANDERING_MAID_DROP_WHITELIST;
     public static final ModConfigSpec.BooleanValue WANDERING_MAID_DEFAULT_ENABLED;
@@ -104,13 +108,28 @@ public class WanderingMaidConfig {
                 .translation("tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupDelaySeconds")
                 .defineInRange("rejectedCleanupDelaySeconds", 30, 0, 600);
 
+        WANDERING_MAID_ADOPT_GIFT_ENABLED = builder
+                .comment("收养（收留）流浪女仆时是否给予随机赠礼。"
+                        + "false：完全禁用收养赠礼，不再发放任何物品；下方掉落白名单/黑名单对该行为也不再生效。")
+                .translation("tlm_wandering_maid.configuration.wanderingMaidAdoptGiftEnabled")
+                .define("adoptGiftEnabled", true);
+
+        WANDERING_MAID_DEATH_DROP_ENABLED = builder
+                .comment("流浪女仆被玩家杀死时，是否额外掉落随机物品。"
+                        + "false：完全禁用死亡掉落，不再掉落任何额外物品（女仆原有的正常掉落不受影响）；"
+                        + "下方掉落白名单/黑名单对该行为也不再生效。")
+                .translation("tlm_wandering_maid.configuration.wanderingMaidDeathDropEnabled")
+                .define("deathDropEnabled", true);
+
         WANDERING_MAID_DROP_BLACKLIST = builder
-                .comment("流浪女仆死亡掉落与收留赠礼的物品黑名单。填写完整物品 ID，例如 minecraft:bedrock；可无限添加，黑名单优先于白名单")
+                .comment("流浪女仆死亡掉落与收留赠礼的物品黑名单。填写完整物品 ID，例如 minecraft:bedrock；可无限添加，黑名单优先于白名单。"
+                        + "仅在上方收养赠礼与死亡掉落开关开启时生效")
                 .translation("tlm_wandering_maid.configuration.wanderingDropBlacklist")
                 .defineListAllowEmpty("dropBlacklist", List::of, () -> "minecraft:bedrock", value -> value instanceof String);
 
         WANDERING_MAID_DROP_WHITELIST = builder
-                .comment("流浪女仆死亡掉落与收留赠礼的物品白名单。留空时允许所有非黑名单物品；填写后只会随机其中的物品，例如 minecraft:diamond")
+                .comment("流浪女仆死亡掉落与收留赠礼的物品白名单。留空时允许所有非黑名单物品；填写后只会随机其中的物品，例如 minecraft:diamond。"
+                        + "仅在上方收养赠礼与死亡掉落开关开启时生效")
                 .translation("tlm_wandering_maid.configuration.wanderingDropWhitelist")
                 .defineListAllowEmpty("dropWhitelist", List::of, () -> "minecraft:bedrock", value -> value instanceof String);
 

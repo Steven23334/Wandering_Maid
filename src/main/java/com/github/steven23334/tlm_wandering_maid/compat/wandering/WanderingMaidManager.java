@@ -516,7 +516,9 @@ public final class WanderingMaidManager {
                 maid.setBegging(false);
                 player.sendSystemMessage(Component.translatable(
                         "message.tlm_wandering_maid.wandering.accepted", maid.getName()));
-                giveRandomItems(player, (ServerLevel) maid.level(), 2);
+                if (WanderingMaidConfig.WANDERING_MAID_ADOPT_GIFT_ENABLED.get()) {
+                    giveRandomItems(player, (ServerLevel) maid.level(), 2);
+                }
                 maid.getChatBubbleManager().addTextChatBubble("bubble.tlm_wandering_maid.trade.new_owner");
                 return;
             }
@@ -530,6 +532,7 @@ public final class WanderingMaidManager {
     @SubscribeEvent
     public void onLivingDrops(LivingDropsEvent event) {
         if (!(event.getEntity() instanceof EntityMaid maid) || !WanderingMaidData.isSpecial(maid)
+                || !WanderingMaidConfig.WANDERING_MAID_DEATH_DROP_ENABLED.get()
                 || !(event.getSource().getEntity() instanceof ServerPlayer)
                 || !(maid.level() instanceof ServerLevel level)) {
             return;

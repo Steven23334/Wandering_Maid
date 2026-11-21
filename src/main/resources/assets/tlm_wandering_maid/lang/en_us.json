@@ -65,6 +65,8 @@
   "tlm_wandering_maid.configuration.wanderingMaidMaxAlive": "Maximum Alive Wandering Maids (Global)",
   "tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupEnabled": "Auto-Cleanup Rejected Wandering Maids",
   "tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupDelaySeconds": "Rejected Cleanup Delay (Seconds)",
+  "tlm_wandering_maid.configuration.wanderingMaidAdoptGiftEnabled": "Adoption Gift",
+  "tlm_wandering_maid.configuration.wanderingMaidDeathDropEnabled": "Death Drops",
   "tlm_wandering_maid.configuration.wanderingDropBlacklist": "Drop Blacklist",
   "tlm_wandering_maid.configuration.wanderingDropWhitelist": "Drop Whitelist",
   "tlm_wandering_maid.configuration.wanderingMaidDefaultEnabled": "Default Enable Personal Wandering Maid",

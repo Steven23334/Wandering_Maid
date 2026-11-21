@@ -27,17 +27,39 @@ sourceSets.main.resources {
 }
 
 repositories {
+    // 国内镜像：NeoForge 官方 Maven（maven.neoforged.net）在部分网络下会长时间超时。
+    // 该镜像代理 NeoForge Maven，未命中的构件会自动回退到后续仓库（含官方源）。
+    maven {
+        name = 'QLU BMCLAPI Maven Mirror'
+        url = 'https://mirrors.qlu.edu.cn/bmclapi/'
+    }
+    // Maven Central 国内镜像（阿里云）；未命中时仍会回退到 mavenCentral()。
+    maven {
+        name = 'Aliyun Maven Central Mirror'
+        url = 'https://maven.aliyun.com/repository/public'
+    }
     flatDir {
         dir 'libs'
     }
     mavenCentral()
-    maven { url = 'https://maven.neoforged.net/releases' }
     maven {
         url = "https://api.modrinth.com/maven"
         content {
             includeGroup "maven.modrinth"
         }
     }
+}
+
+// ModDevGradle 应用时会自动注入 Mojang / NeoForged 官方仓库，其中 maven.neoforged.net
+// 在国内网络下不可达。若它排在镜像前面，Gradle 会先连接官方源并超时失败，所以将其移到末尾：
+// 仅当镜像与其它仓库都未命中时才回退到官方源。
+def officialNeoForgedRepositories = repositories.findAll {
+    it instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository
+            && it.url.toString().startsWith('https://maven.neoforged.net/releases')
+}.toList()
+officialNeoForgedRepositories.each { repo ->
+    repositories.remove(repo)
+    repositories.add(repo)
 }
 
 base {

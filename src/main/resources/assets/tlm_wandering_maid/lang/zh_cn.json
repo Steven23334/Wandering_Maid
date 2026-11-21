@@ -65,6 +65,8 @@
   "tlm_wandering_maid.configuration.wanderingMaidMaxAlive": "全服同时存在的流浪女仆上限",
   "tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupEnabled": "自动清除被拒绝的流浪女仆",
   "tlm_wandering_maid.configuration.wanderingMaidRejectedCleanupDelaySeconds": "被拒绝后清除延迟（秒）",
+  "tlm_wandering_maid.configuration.wanderingMaidAdoptGiftEnabled": "收留赠礼",
+  "tlm_wandering_maid.configuration.wanderingMaidDeathDropEnabled": "死亡掉落",
   "tlm_wandering_maid.configuration.wanderingDropBlacklist": "掉落黑名单",
   "tlm_wandering_maid.configuration.wanderingDropWhitelist": "掉落白名单",
   "tlm_wandering_maid.configuration.wanderingMaidDefaultEnabled": "默认开启个人流浪女仆",
